@@ -1,28 +1,29 @@
 --[[
-    zarcy's MM2 Hub v2
+    zarcy's MM2 Hub v3
     Executor : Delta (mobile)
     Game     : Murder Mystery 2
 ]]
 
 if getgenv().ZarcyLoaded then
-    if game:GetService("CoreGui"):FindFirstChild("ZarcyHub") then
+    pcall(function()
         game:GetService("CoreGui"):FindFirstChild("ZarcyHub"):Destroy()
-    end
-    if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ZarcyHub") then
+    end)
+    pcall(function()
         game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("ZarcyHub"):Destroy()
-    end
+    end)
 end
 getgenv().ZarcyLoaded = true
 
 local ok, err = pcall(function()
 
-local Players    = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UIS        = game:GetService("UserInputService")
-local Lighting   = game:GetService("Lighting")
-local TweenSvc   = game:GetService("TweenService")
-local TeleportSvc= game:GetService("TeleportService")
-local LP         = Players.LocalPlayer
+local Players     = game:GetService("Players")
+local RunService  = game:GetService("RunService")
+local UIS         = game:GetService("UserInputService")
+local Lighting    = game:GetService("Lighting")
+local TweenSvc    = game:GetService("TweenService")
+local TeleportSvc = game:GetService("TeleportService")
+local LP          = Players.LocalPlayer
+local Cam         = workspace.CurrentCamera
 
 local Char, HRP, Hum
 local Conns = {}
@@ -65,7 +66,7 @@ local RoleCol = {
     Innocent = Color3.fromRGB(80,240,130),
 }
 
--- ESP
+-- ── ESP ───────────────────────────────────────────────────────────────────────
 local ESPPool = {}
 local function NewDraw(class, props)
     local d = Drawing.new(class)
@@ -75,10 +76,10 @@ end
 local function MakeESP(p)
     if p==LP then return end
     ESPPool[p] = {
-        name  = NewDraw("Text",  {Size=13,Font=Drawing.Fonts.UI,Center=true,Outline=true,OutlineColor=Color3.new(0,0,0),Visible=false}),
-        role  = NewDraw("Text",  {Size=11,Font=Drawing.Fonts.UI,Center=true,Outline=true,OutlineColor=Color3.new(0,0,0),Visible=false}),
-        dist  = NewDraw("Text",  {Size=10,Font=Drawing.Fonts.UI,Center=true,Outline=true,OutlineColor=Color3.new(0,0,0),Visible=false}),
-        tracer= NewDraw("Line",  {Thickness=1,Visible=false}),
+        name  = NewDraw("Text",{Size=13,Font=Drawing.Fonts.UI,Center=true,Outline=true,OutlineColor=Color3.new(0,0,0),Visible=false}),
+        role  = NewDraw("Text",{Size=11,Font=Drawing.Fonts.UI,Center=true,Outline=true,OutlineColor=Color3.new(0,0,0),Visible=false}),
+        dist  = NewDraw("Text",{Size=10,Font=Drawing.Fonts.UI,Center=true,Outline=true,OutlineColor=Color3.new(0,0,0),Visible=false}),
+        tracer= NewDraw("Line",{Thickness=1,Visible=false}),
     }
 end
 local function KillESP(p)
@@ -90,7 +91,6 @@ Players.PlayerRemoving:Connect(KillESP)
 
 local GunDraw = NewDraw("Text",{Size=13,Font=Drawing.Fonts.UI,Center=true,Outline=true,OutlineColor=Color3.new(0,0,0),Text="[ GUN ]",Color=Color3.fromRGB(60,200,255),Visible=false})
 
-local Cam = workspace.CurrentCamera
 table.insert(Conns, RunService.RenderStepped:Connect(function()
     for plr,obj in pairs(ESPPool) do
         local chr  = plr.Character
@@ -150,6 +150,7 @@ table.insert(Conns, RunService.RenderStepped:Connect(function()
     end
 end))
 
+-- ── STEPPED ──────────────────────────────────────────────────────────────────
 table.insert(Conns, RunService.Stepped:Connect(function()
     if C.Noclip and Char then
         for _,p in pairs(Char:GetDescendants()) do
@@ -189,21 +190,32 @@ local function startCoinFarm()
         for _,obj in pairs(workspace:GetDescendants()) do
             if obj:IsA("BasePart") and obj.Name:lower():find("coin") then
                 if (HRP.Position-obj.Position).Magnitude<200 then
-                    local sv=HRP.CFrame; HRP.CFrame=CFrame.new(obj.Position)
-                    task.wait(); if HRP and HRP.Parent then HRP.CFrame=sv end
+                    local sv=HRP.CFrame
+                    HRP.CFrame=CFrame.new(obj.Position)
+                    task.wait()
+                    if HRP and HRP.Parent then HRP.CFrame=sv end
                 end
             end
         end
     end)
 end
 
-local origAmb=Lighting.Ambient; local origBri=Lighting.Brightness; local origFog=Lighting.FogEnd
-local function applyFB(on) Lighting.Ambient=on and Color3.fromRGB(178,178,178) or origAmb; Lighting.Brightness=on and 2 or origBri end
+local origAmb=Lighting.Ambient
+local origBri=Lighting.Brightness
+local origFog=Lighting.FogEnd
+local function applyFB(on)
+    Lighting.Ambient=on and Color3.fromRGB(178,178,178) or origAmb
+    Lighting.Brightness=on and 2 or origBri
+end
 local function applyFog(on) Lighting.FogEnd=on and 9e8 or origFog end
 local origMin
 local function applyTP(on)
-    if on then origMin=LP.CameraMinZoomDistance; LP.CameraMinZoomDistance=8; LP.CameraMaxZoomDistance=16
-    else LP.CameraMinZoomDistance=origMin or 0.5; LP.CameraMaxZoomDistance=400 end
+    if on then
+        origMin=LP.CameraMinZoomDistance
+        LP.CameraMinZoomDistance=8; LP.CameraMaxZoomDistance=16
+    else
+        LP.CameraMinZoomDistance=origMin or 0.5; LP.CameraMaxZoomDistance=400
+    end
 end
 
 -- ── COLORS ───────────────────────────────────────────────────────────────────
@@ -219,97 +231,195 @@ local cOFF = Color3.fromRGB(30,8,60)
 local FB   = Enum.Font.GothamBold
 local FN   = Enum.Font.Gotham
 
-local function corner(p,r) local c=Instance.new("UICorner",p); c.CornerRadius=UDim.new(0,r or 6) end
-local function stroke(p,col,th) local s=Instance.new("UIStroke",p); s.Color=col or cPRP; s.Thickness=th or 1 end
-
--- ── GUI PARENT — Delta compatible ────────────────────────────────────────────
-local SG = Instance.new("ScreenGui")
-SG.Name="ZarcyHub"; SG.ResetOnSpawn=false; SG.IgnoreGuiInset=true
-SG.ZIndexBehavior=Enum.ZIndexBehavior.Sibling; SG.DisplayOrder=999
-local parentOk = pcall(function() SG.Parent=game:GetService("CoreGui") end)
-if not parentOk or not SG.Parent then
-    SG.Parent = LP:WaitForChild("PlayerGui")
+local function corner(p,r)
+    local c=Instance.new("UICorner",p); c.CornerRadius=UDim.new(0,r or 6)
+end
+local function stroke(p,col,th)
+    local s=Instance.new("UIStroke",p); s.Color=col or cPRP; s.Thickness=th or 1
 end
 
--- ── NOTIFY ON LOAD ───────────────────────────────────────────────────────────
-local Notif = Instance.new("Frame",SG)
-Notif.Size=UDim2.new(0,220,0,44); Notif.Position=UDim2.new(0.5,-110,0,18)
+-- ── GUI ───────────────────────────────────────────────────────────────────────
+local SG=Instance.new("ScreenGui")
+SG.Name="ZarcyHub"; SG.ResetOnSpawn=false
+SG.IgnoreGuiInset=true; SG.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+SG.DisplayOrder=999
+local parentOk=pcall(function() SG.Parent=game:GetService("CoreGui") end)
+if not parentOk or not SG.Parent then SG.Parent=LP:WaitForChild("PlayerGui") end
+
+-- notify
+local Notif=Instance.new("Frame",SG)
+Notif.Size=UDim2.new(0,210,0,40); Notif.Position=UDim2.new(0.5,-105,0,16)
 Notif.BackgroundColor3=Color3.fromRGB(26,7,58); Notif.BorderSizePixel=0; Notif.ZIndex=99
 corner(Notif,10); stroke(Notif,cLPP)
 local NLbl=Instance.new("TextLabel",Notif)
 NLbl.Size=UDim2.new(1,0,1,0); NLbl.BackgroundTransparency=1
-NLbl.Font=FB; NLbl.TextSize=13; NLbl.TextColor3=cLPP
-NLbl.Text="✦  zarcy's hub loaded"
-task.delay(2.5, function()
+NLbl.Font=FB; NLbl.TextSize=13; NLbl.TextColor3=cLPP; NLbl.Text="✦  zarcy's hub v3"
+task.delay(2.5,function()
     TweenSvc:Create(Notif,TweenInfo.new(0.4),{BackgroundTransparency=1}):Play()
     TweenSvc:Create(NLbl,TweenInfo.new(0.4),{TextTransparency=1}):Play()
     task.wait(0.45); Notif:Destroy()
 end)
 
--- ── MAIN FRAME ───────────────────────────────────────────────────────────────
+-- ── MAIN — smaller ───────────────────────────────────────────────────────────
+local W,H = 262, 400
 local Main=Instance.new("Frame",SG)
-Main.Name="Main"; Main.Size=UDim2.new(0,286,0,440)
-Main.Position=UDim2.new(0,8,0.5,-220)
-Main.BackgroundColor3=cBG; Main.BorderSizePixel=0
-Main.Active=true; Main.Visible=true
-corner(Main,14); stroke(Main,Color3.fromRGB(52,14,108))
+Main.Name="Main"; Main.Size=UDim2.new(0,W,0,H)
+Main.Position=UDim2.new(0,6,0.5,-H/2)
+Main.BackgroundColor3=cBG; Main.BorderSizePixel=0; Main.Active=true
+corner(Main,12); stroke(Main,Color3.fromRGB(52,14,108))
 
+-- header
+local HDR_H = 42
 local Hdr=Instance.new("Frame",Main)
-Hdr.Size=UDim2.new(1,0,0,46); Hdr.BackgroundColor3=cHDR; Hdr.BorderSizePixel=0; corner(Hdr,14)
+Hdr.Name="Hdr"; Hdr.Size=UDim2.new(1,0,0,HDR_H)
+Hdr.BackgroundColor3=cHDR; Hdr.BorderSizePixel=0; Hdr.Active=true
+corner(Hdr,12)
 local HFill=Instance.new("Frame",Hdr)
-HFill.Size=UDim2.new(1,0,0,14); HFill.Position=UDim2.new(0,0,1,-14); HFill.BackgroundColor3=cHDR; HFill.BorderSizePixel=0
+HFill.Size=UDim2.new(1,0,0,12); HFill.Position=UDim2.new(0,0,1,-12)
+HFill.BackgroundColor3=cHDR; HFill.BorderSizePixel=0
 
 local TitleLbl=Instance.new("TextLabel",Hdr)
-TitleLbl.Size=UDim2.new(1,-90,1,0); TitleLbl.Position=UDim2.new(0,12,0,0)
-TitleLbl.BackgroundTransparency=1; TitleLbl.Font=FB; TitleLbl.TextSize=14
+TitleLbl.Size=UDim2.new(1,-84,1,0); TitleLbl.Position=UDim2.new(0,10,0,0)
+TitleLbl.BackgroundTransparency=1; TitleLbl.Font=FB; TitleLbl.TextSize=13
 TitleLbl.TextColor3=cLPP; TitleLbl.TextXAlignment=Enum.TextXAlignment.Left
 TitleLbl.Text="✦  zarcy's hub  ·  mm2"
 
 local MinBtn=Instance.new("TextButton",Hdr)
-MinBtn.Size=UDim2.new(0,38,0,38); MinBtn.Position=UDim2.new(1,-80,0,4)
-MinBtn.BackgroundTransparency=1; MinBtn.Font=FB; MinBtn.TextSize=18
+MinBtn.Size=UDim2.new(0,34,0,34); MinBtn.Position=UDim2.new(1,-74,0,4)
+MinBtn.BackgroundTransparency=1; MinBtn.Font=FB; MinBtn.TextSize=17
 MinBtn.TextColor3=cLPP; MinBtn.Text="—"; MinBtn.BorderSizePixel=0
 
 local ClsBtn=Instance.new("TextButton",Hdr)
-ClsBtn.Size=UDim2.new(0,38,0,38); ClsBtn.Position=UDim2.new(1,-42,0,4)
-ClsBtn.BackgroundTransparency=1; ClsBtn.Font=FB; ClsBtn.TextSize=18
+ClsBtn.Size=UDim2.new(0,34,0,34); ClsBtn.Position=UDim2.new(1,-38,0,4)
+ClsBtn.BackgroundTransparency=1; ClsBtn.Font=FB; ClsBtn.TextSize=17
 ClsBtn.TextColor3=cLPP; ClsBtn.Text="✕"; ClsBtn.BorderSizePixel=0
 
+-- tab bar
+local TAB_H = 32
 local TabBar=Instance.new("Frame",Main)
-TabBar.Size=UDim2.new(1,0,0,36); TabBar.Position=UDim2.new(0,0,0,46)
+TabBar.Size=UDim2.new(1,0,0,TAB_H); TabBar.Position=UDim2.new(0,0,0,HDR_H)
 TabBar.BackgroundColor3=Color3.fromRGB(10,3,26); TabBar.BorderSizePixel=0
 local TBL=Instance.new("UIListLayout",TabBar)
 TBL.FillDirection=Enum.FillDirection.Horizontal
 TBL.HorizontalAlignment=Enum.HorizontalAlignment.Center
 TBL.VerticalAlignment=Enum.VerticalAlignment.Center
-TBL.Padding=UDim.new(0,4)
+TBL.Padding=UDim.new(0,3)
 
+-- content
 local Content=Instance.new("Frame",Main)
-Content.Size=UDim2.new(1,0,1,-82); Content.Position=UDim2.new(0,0,0,82)
+Content.Size=UDim2.new(1,0,1,-(HDR_H+TAB_H))
+Content.Position=UDim2.new(0,0,0,HDR_H+TAB_H)
 Content.BackgroundTransparency=1; Content.ClipsDescendants=true
+
+-- ── DRAG — proper mobile touch ────────────────────────────────────────────────
+local dragging = false
+local dragStart = nil
+local startPos  = nil
+
+local function onDragStart(input)
+    dragging  = true
+    dragStart = input.Position
+    startPos  = Main.Position
+end
+local function onDragChange(input)
+    if not dragging then return end
+    local delta = input.Position - dragStart
+    Main.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+local function onDragEnd()
+    dragging = false
+end
+
+Hdr.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        onDragStart(input)
+    end
+end)
+Hdr.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseMovement then
+        onDragChange(input)
+    end
+end)
+Hdr.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        onDragEnd()
+    end
+end)
+-- fallback global touch move
+table.insert(Conns, UIS.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseMovement then
+        onDragChange(input)
+    end
+end))
+table.insert(Conns, UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        onDragEnd()
+    end
+end))
+
+-- ── MINIMIZE ─────────────────────────────────────────────────────────────────
+local mini = false
+MinBtn.MouseButton1Click:Connect(function()
+    mini = not mini
+    if mini then
+        TabBar.Visible = false
+        Content.Visible = false
+        TweenSvc:Create(Main,TweenInfo.new(0.18),{Size=UDim2.new(0,W,0,HDR_H)}):Play()
+        MinBtn.Text = "+"
+    else
+        TweenSvc:Create(Main,TweenInfo.new(0.18),{Size=UDim2.new(0,W,0,H)}):Play()
+        task.wait(0.18)
+        TabBar.Visible = true
+        Content.Visible = true
+        MinBtn.Text = "—"
+    end
+end)
+
+-- ── CLOSE ────────────────────────────────────────────────────────────────────
+ClsBtn.MouseButton1Click:Connect(function()
+    GunDraw:Remove()
+    for _,obj in pairs(ESPPool) do for _,d in pairs(obj) do d:Remove() end end
+    for _,c in ipairs(Conns) do pcall(function() c:Disconnect() end) end
+    if CoinConn then CoinConn:Disconnect() end
+    if AKConn   then AKConn:Disconnect()   end
+    getgenv().ZarcyLoaded = false
+    SG:Destroy()
+end)
 
 -- ── WIDGETS ──────────────────────────────────────────────────────────────────
 local function ToggleRow(parent,label,key,cb,ord)
     local row=Instance.new("Frame",parent)
-    row.Size=UDim2.new(1,0,0,48); row.BackgroundColor3=cROW; row.BorderSizePixel=0; row.LayoutOrder=ord or 0
+    row.Size=UDim2.new(1,0,0,44); row.BackgroundColor3=cROW
+    row.BorderSizePixel=0; row.LayoutOrder=ord or 0
     local lbl=Instance.new("TextLabel",row)
-    lbl.Size=UDim2.new(1,-74,1,0); lbl.Position=UDim2.new(0,12,0,0)
-    lbl.BackgroundTransparency=1; lbl.Font=FN; lbl.TextSize=13; lbl.TextColor3=cTXT
-    lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Text=label
+    lbl.Size=UDim2.new(1,-70,1,0); lbl.Position=UDim2.new(0,10,0,0)
+    lbl.BackgroundTransparency=1; lbl.Font=FN; lbl.TextSize=12
+    lbl.TextColor3=cTXT; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Text=label
     local bg=Instance.new("Frame",row)
-    bg.Size=UDim2.new(0,46,0,26); bg.Position=UDim2.new(1,-56,0.5,-13)
-    bg.BackgroundColor3=C[key] and cON or cOFF; corner(bg,13)
+    bg.Size=UDim2.new(0,42,0,24); bg.Position=UDim2.new(1,-50,0.5,-12)
+    bg.BackgroundColor3=C[key] and cON or cOFF; corner(bg,12)
     local knob=Instance.new("Frame",bg)
-    knob.Size=UDim2.new(0,20,0,20)
-    knob.Position=C[key] and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10)
-    knob.BackgroundColor3=C[key] and cLPP or Color3.fromRGB(90,50,160); corner(knob,10)
+    knob.Size=UDim2.new(0,18,0,18)
+    knob.Position=C[key] and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3=C[key] and cLPP or Color3.fromRGB(90,50,160); corner(knob,9)
     local hit=Instance.new("TextButton",row)
-    hit.Size=UDim2.new(1,0,1,0); hit.BackgroundTransparency=1; hit.Text=""; hit.ZIndex=row.ZIndex+4
+    hit.Size=UDim2.new(1,0,1,0); hit.BackgroundTransparency=1
+    hit.Text=""; hit.ZIndex=row.ZIndex+4
     hit.MouseButton1Click:Connect(function()
         C[key]=not C[key]; local on=C[key]
         TweenSvc:Create(bg,TweenInfo.new(0.14),{BackgroundColor3=on and cON or cOFF}):Play()
         TweenSvc:Create(knob,TweenInfo.new(0.14),{
-            Position=on and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10),
+            Position=on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9),
             BackgroundColor3=on and cLPP or Color3.fromRGB(90,50,160)
         }):Play()
         if cb then pcall(cb,on) end
@@ -318,38 +428,46 @@ end
 
 local function SliderRow(parent,label,key,min,max,ord,cb)
     local row=Instance.new("Frame",parent)
-    row.Size=UDim2.new(1,0,0,60); row.BackgroundColor3=cROW; row.BorderSizePixel=0; row.LayoutOrder=ord or 0
+    row.Size=UDim2.new(1,0,0,56); row.BackgroundColor3=cROW
+    row.BorderSizePixel=0; row.LayoutOrder=ord or 0
     local lbl=Instance.new("TextLabel",row)
-    lbl.Size=UDim2.new(1,-70,0,28); lbl.Position=UDim2.new(0,12,0,2)
-    lbl.BackgroundTransparency=1; lbl.Font=FN; lbl.TextSize=13; lbl.TextColor3=cTXT
-    lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Text=label
+    lbl.Size=UDim2.new(1,-66,0,26); lbl.Position=UDim2.new(0,10,0,2)
+    lbl.BackgroundTransparency=1; lbl.Font=FN; lbl.TextSize=12
+    lbl.TextColor3=cTXT; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Text=label
     local vLbl=Instance.new("TextLabel",row)
-    vLbl.Size=UDim2.new(0,56,0,28); vLbl.Position=UDim2.new(1,-64,0,2)
-    vLbl.BackgroundTransparency=1; vLbl.Font=FB; vLbl.TextSize=12; vLbl.TextColor3=cLPP
-    vLbl.TextXAlignment=Enum.TextXAlignment.Right; vLbl.Text=tostring(C[key])
+    vLbl.Size=UDim2.new(0,52,0,26); vLbl.Position=UDim2.new(1,-58,0,2)
+    vLbl.BackgroundTransparency=1; vLbl.Font=FB; vLbl.TextSize=11
+    vLbl.TextColor3=cLPP; vLbl.TextXAlignment=Enum.TextXAlignment.Right
+    vLbl.Text=tostring(C[key])
     local track=Instance.new("Frame",row)
-    track.Size=UDim2.new(1,-24,0,5); track.Position=UDim2.new(0,12,0,42)
+    track.Size=UDim2.new(1,-20,0,5); track.Position=UDim2.new(0,10,0,38)
     track.BackgroundColor3=Color3.fromRGB(25,8,52); corner(track,2)
     local ratio=(C[key]-min)/(max-min)
     local fill=Instance.new("Frame",track)
-    fill.Size=UDim2.new(ratio,0,1,0); fill.BackgroundColor3=cPRP; fill.BorderSizePixel=0; corner(fill,2)
+    fill.Size=UDim2.new(ratio,0,1,0); fill.BackgroundColor3=cPRP
+    fill.BorderSizePixel=0; corner(fill,2)
     local knob=Instance.new("TextButton",track)
-    knob.Size=UDim2.new(0,20,0,20); knob.Position=UDim2.new(ratio,-10,0.5,-10)
-    knob.BackgroundColor3=cLPP; knob.Text=""; knob.BorderSizePixel=0; corner(knob,10)
+    knob.Size=UDim2.new(0,18,0,18); knob.Position=UDim2.new(ratio,-9,0.5,-9)
+    knob.BackgroundColor3=cLPP; knob.Text=""; knob.BorderSizePixel=0; corner(knob,9)
     local hold=false
-    knob.MouseButton1Down:Connect(function() hold=true end)
-    knob.TouchLongPress:Connect(function() hold=true end)
-    game:GetService("UserInputService").InputEnded:Connect(function(i)
-        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then hold=false end
+    knob.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+            hold=true
+        end
     end)
-    game:GetService("UserInputService").InputChanged:Connect(function(i)
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+            hold=false
+        end
+    end)
+    UIS.InputChanged:Connect(function(i)
         if not hold then return end
-        if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
+        if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseMovement then
             local tAbs=track.AbsolutePosition; local tSz=track.AbsoluteSize
             local r=math.clamp((i.Position.X-tAbs.X)/tSz.X,0,1)
             local v=math.round(min+(max-min)*r)
             C[key]=v; vLbl.Text=tostring(v)
-            fill.Size=UDim2.new(r,0,1,0); knob.Position=UDim2.new(r,-10,0.5,-10)
+            fill.Size=UDim2.new(r,0,1,0); knob.Position=UDim2.new(r,-9,0.5,-9)
             if cb then pcall(cb,v) end
         end
     end)
@@ -357,35 +475,41 @@ end
 
 local function BtnRow(parent,label,btnTxt,cb,ord)
     local row=Instance.new("Frame",parent)
-    row.Size=UDim2.new(1,0,0,48); row.BackgroundColor3=cROW; row.BorderSizePixel=0; row.LayoutOrder=ord or 0
+    row.Size=UDim2.new(1,0,0,44); row.BackgroundColor3=cROW
+    row.BorderSizePixel=0; row.LayoutOrder=ord or 0
     local lbl=Instance.new("TextLabel",row)
-    lbl.Size=UDim2.new(1,-110,1,0); lbl.Position=UDim2.new(0,12,0,0)
-    lbl.BackgroundTransparency=1; lbl.Font=FN; lbl.TextSize=13; lbl.TextColor3=cTXT
-    lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Text=label
+    lbl.Size=UDim2.new(1,-106,1,0); lbl.Position=UDim2.new(0,10,0,0)
+    lbl.BackgroundTransparency=1; lbl.Font=FN; lbl.TextSize=12
+    lbl.TextColor3=cTXT; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Text=label
     local btn=Instance.new("TextButton",row)
-    btn.Size=UDim2.new(0,90,0,32); btn.Position=UDim2.new(1,-98,0.5,-16)
-    btn.BackgroundColor3=Color3.fromRGB(52,14,108); btn.Font=FB; btn.TextSize=12
+    btn.Size=UDim2.new(0,86,0,30); btn.Position=UDim2.new(1,-92,0.5,-15)
+    btn.BackgroundColor3=Color3.fromRGB(52,14,108); btn.Font=FB; btn.TextSize=11
     btn.TextColor3=cLPP; btn.Text=btnTxt or "Run"; btn.BorderSizePixel=0
     corner(btn,6); stroke(btn,cPRP)
     btn.MouseButton1Click:Connect(function()
         TweenSvc:Create(btn,TweenInfo.new(0.1),{BackgroundColor3=cPRP}):Play()
-        task.delay(0.15,function() TweenSvc:Create(btn,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(52,14,108)}):Play() end)
+        task.delay(0.15,function()
+            TweenSvc:Create(btn,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(52,14,108)}):Play()
+        end)
         if cb then pcall(cb) end
     end)
 end
 
 local function SecHead(parent,text,ord)
     local f=Instance.new("Frame",parent)
-    f.Size=UDim2.new(1,0,0,28); f.BackgroundColor3=cSEC; f.BorderSizePixel=0; f.LayoutOrder=ord or 0
+    f.Size=UDim2.new(1,0,0,24); f.BackgroundColor3=cSEC
+    f.BorderSizePixel=0; f.LayoutOrder=ord or 0
     local l=Instance.new("TextLabel",f)
-    l.Size=UDim2.new(1,-12,1,0); l.Position=UDim2.new(0,12,0,0)
-    l.BackgroundTransparency=1; l.Font=FB; l.TextSize=11
-    l.TextColor3=Color3.fromRGB(139,92,246); l.TextXAlignment=Enum.TextXAlignment.Left; l.Text=text
+    l.Size=UDim2.new(1,-10,1,0); l.Position=UDim2.new(0,10,0,0)
+    l.BackgroundTransparency=1; l.Font=FB; l.TextSize=10
+    l.TextColor3=Color3.fromRGB(139,92,246)
+    l.TextXAlignment=Enum.TextXAlignment.Left; l.Text=text
 end
 
 local function Sep(parent,ord)
     local f=Instance.new("Frame",parent)
-    f.Size=UDim2.new(1,0,0,1); f.BackgroundColor3=Color3.fromRGB(28,8,58); f.BorderSizePixel=0; f.LayoutOrder=ord or 0
+    f.Size=UDim2.new(1,0,0,1); f.BackgroundColor3=Color3.fromRGB(28,8,58)
+    f.BorderSizePixel=0; f.LayoutOrder=ord or 0
 end
 
 -- ── TABS ─────────────────────────────────────────────────────────────────────
@@ -394,15 +518,16 @@ local TBtns={}; local TPages={}
 
 for _,name in ipairs(TABS) do
     local btn=Instance.new("TextButton",TabBar)
-    btn.Size=UDim2.new(0,52,0,28); btn.Font=FB; btn.TextSize=11
+    btn.Size=UDim2.new(0,48,0,26); btn.Font=FB; btn.TextSize=10
     btn.BackgroundColor3=cOFF; btn.TextColor3=Color3.fromRGB(140,100,200)
-    btn.BorderSizePixel=0; btn.Text=name; corner(btn,7)
+    btn.BorderSizePixel=0; btn.Text=name; corner(btn,6)
     TBtns[name]=btn
     local page=Instance.new("ScrollingFrame",Content)
     page.Size=UDim2.new(1,0,1,0); page.BackgroundTransparency=1
-    page.BorderSizePixel=0; page.ScrollBarThickness=3
+    page.BorderSizePixel=0; page.ScrollBarThickness=2
     page.ScrollBarImageColor3=cPRP; page.Visible=false
-    page.CanvasSize=UDim2.new(0,0,0,0); page.AutomaticCanvasSize=Enum.AutomaticSize.Y
+    page.CanvasSize=UDim2.new(0,0,0,0)
+    page.AutomaticCanvasSize=Enum.AutomaticSize.Y
     Instance.new("UIListLayout",page).Padding=UDim.new(0,0)
     TPages[name]=page
     btn.MouseButton1Click:Connect(function()
@@ -425,24 +550,26 @@ do local p=TPages["ESP"]
     SecHead(p,"▸  ITEMS",7)
     ToggleRow(p,"Gun ESP","GunESP",nil,8)
     Sep(p,9)
-    SecHead(p,"▸  ROLES",10)
+    SecHead(p,"▸  ROLE REVEAL",10)
     ToggleRow(p,"Role Reveal","RoleReveal",nil,11)
     local rl=Instance.new("Frame",p)
     rl.Size=UDim2.new(1,0,0,0); rl.AutomaticSize=Enum.AutomaticSize.Y
     rl.BackgroundColor3=Color3.fromRGB(9,3,22); rl.BorderSizePixel=0; rl.LayoutOrder=12
-    Instance.new("UIListLayout",rl).Padding=UDim.new(0,2)
-    local UIPad=Instance.new("UIPadding",rl)
-    UIPad.PaddingLeft=UDim.new(0,8); UIPad.PaddingRight=UDim.new(0,8)
-    UIPad.PaddingTop=UDim.new(0,4); UIPad.PaddingBottom=UDim.new(0,4)
+    local rll=Instance.new("UIListLayout",rl); rll.Padding=UDim.new(0,2)
+    local rp=Instance.new("UIPadding",rl)
+    rp.PaddingLeft=UDim.new(0,8); rp.PaddingRight=UDim.new(0,8)
+    rp.PaddingTop=UDim.new(0,4); rp.PaddingBottom=UDim.new(0,4)
     task.spawn(function()
         while SG and SG.Parent do
-            for _,c in pairs(rl:GetChildren()) do if c:IsA("Frame") or c:IsA("TextLabel") then c:Destroy() end end
+            for _,c in pairs(rl:GetChildren()) do
+                if c:IsA("TextLabel") then c:Destroy() end
+            end
             if C.RoleReveal then
                 for _,plr in ipairs(Players:GetPlayers()) do
                     local role=GetRole(plr)
                     local lbl=Instance.new("TextLabel",rl)
-                    lbl.Size=UDim2.new(1,0,0,32); lbl.BackgroundTransparency=1
-                    lbl.Font=FB; lbl.TextSize=12; lbl.TextColor3=RoleCol[role]
+                    lbl.Size=UDim2.new(1,0,0,28); lbl.BackgroundTransparency=1
+                    lbl.Font=FB; lbl.TextSize=11; lbl.TextColor3=RoleCol[role]
                     lbl.TextXAlignment=Enum.TextXAlignment.Left
                     lbl.Text="  "..plr.Name.."  —  "..role
                 end
@@ -455,21 +582,27 @@ end
 -- ── COMBAT TAB ───────────────────────────────────────────────────────────────
 do local p=TPages["Combat"]
     SecHead(p,"▸  AIMBOT",1)
-    ToggleRow(p,"Aimbot","Aimbot",nil,2)
+    ToggleRow(p,"Aimbot (closest in FOV)","Aimbot",nil,2)
     Sep(p,3)
     SecHead(p,"▸  HITBOX",4)
     ToggleRow(p,"Hitbox Expander","HitboxExpand",nil,5)
     SliderRow(p,"Hitbox Size","HitboxSize",4,50,6)
     Sep(p,7)
     SecHead(p,"▸  SURVIVAL",8)
-    ToggleRow(p,"Anti Kill","AntiKill",function(on) if on then startAntiKill() end end,9)
+    ToggleRow(p,"Anti Kill","AntiKill",function(on)
+        if on then startAntiKill() end
+    end,9)
 end
 
 -- ── MOVE TAB ─────────────────────────────────────────────────────────────────
 do local p=TPages["Move"]
     SecHead(p,"▸  MOVEMENT",1)
-    ToggleRow(p,"Speed Hack","SpeedOn",function(on) if not on and Hum then Hum.WalkSpeed=16 end end,2)
-    SliderRow(p,"Walk Speed","Speed",8,120,3,function(v) if C.SpeedOn and Hum then Hum.WalkSpeed=v end end)
+    ToggleRow(p,"Speed Hack","SpeedOn",function(on)
+        if not on and Hum then Hum.WalkSpeed=16 end
+    end,2)
+    SliderRow(p,"Walk Speed","Speed",8,120,3,function(v)
+        if C.SpeedOn and Hum then Hum.WalkSpeed=v end
+    end)
     ToggleRow(p,"Infinite Jump","InfJump",nil,4)
     ToggleRow(p,"No Clip","Noclip",nil,5)
     Sep(p,6)
@@ -482,7 +615,8 @@ do local p=TPages["Move"]
         for _,pl in ipairs(Players:GetPlayers()) do
             if pl~=LP and GetRole(pl)=="Murderer" and pl.Character then
                 local r=pl.Character:FindFirstChild("HumanoidRootPart")
-                if r and HRP then HRP.CFrame=r.CFrame+Vector3.new(3,0,0) end; return
+                if r and HRP then HRP.CFrame=r.CFrame+Vector3.new(3,0,0) end
+                return
             end
         end
     end,9)
@@ -492,7 +626,10 @@ do local p=TPages["Move"]
                 local n=obj.Name:lower()
                 if n:find("gun") or n:find("sheriff") then
                     local h=obj:FindFirstChild("Handle")
-                    if h and HRP then HRP.CFrame=CFrame.new(h.Position+Vector3.new(0,4,0)) end; return
+                    if h and HRP then
+                        HRP.CFrame=CFrame.new(h.Position+Vector3.new(0,4,0))
+                    end
+                    return
                 end
             end
         end
@@ -522,15 +659,19 @@ do local p=TPages["MM2"]
             if not HRP then return end
             for _,obj in pairs(workspace:GetDescendants()) do
                 if obj:IsA("BasePart") and obj.Name:lower():find("coin") then
-                    local sv=HRP.CFrame; HRP.CFrame=CFrame.new(obj.Position)
-                    task.wait(0.04); if HRP and HRP.Parent then HRP.CFrame=sv end
+                    local sv=HRP.CFrame
+                    HRP.CFrame=CFrame.new(obj.Position)
+                    task.wait(0.04)
+                    if HRP and HRP.Parent then HRP.CFrame=sv end
                 end
             end
         end)
     end,3)
     Sep(p,4)
     SecHead(p,"▸  TOOLS",5)
-    BtnRow(p,"Print My Role","Check",function() print("[zarcy] Role:",GetRole(LP)) end,6)
+    BtnRow(p,"Print My Role","Check",function()
+        print("[zarcy] Role:",GetRole(LP))
+    end,6)
     BtnRow(p,"Kill Murderer","Touch",function()
         for _,pl in ipairs(Players:GetPlayers()) do
             if pl~=LP and GetRole(pl)=="Murderer" and pl.Character then
@@ -538,15 +679,20 @@ do local p=TPages["MM2"]
                 if r and HRP then
                     local wasNC=C.Noclip; C.Noclip=true
                     HRP.CFrame=r.CFrame; task.wait(0.15); C.Noclip=wasNC
-                end; return
+                end
+                return
             end
         end
     end,7)
     Sep(p,8)
     SecHead(p,"▸  MISC",9)
-    BtnRow(p,"Rejoin","Go",function() TeleportSvc:Teleport(game.PlaceId,LP) end,10)
+    BtnRow(p,"Rejoin","Go",function()
+        TeleportSvc:Teleport(game.PlaceId,LP)
+    end,10)
     BtnRow(p,"Print Players","Log",function()
-        for _,pl in ipairs(Players:GetPlayers()) do print(pl.Name,GetRole(pl)) end
+        for _,pl in ipairs(Players:GetPlayers()) do
+            print(pl.Name,GetRole(pl))
+        end
     end,11)
 end
 
@@ -558,58 +704,28 @@ do local p=TPages["Visual"]
     ToggleRow(p,"Third Person","ThirdPerson",function(on) applyTP(on) end,4)
     Sep(p,5)
     SecHead(p,"▸  MISC",6)
-    BtnRow(p,"Reset Character","Reset",function() if Hum then Hum.Health=0 end end,7)
+    BtnRow(p,"Reset Character","Reset",function()
+        if Hum then Hum.Health=0 end
+    end,7)
+    BtnRow(p,"Server Info","Log",function()
+        print("PlaceId:",game.PlaceId,"JobId:",game.JobId)
+    end,8)
 end
 
--- default tab
+-- open ESP by default
 TBtns["ESP"].MouseButton1Click:Fire()
 
--- ── DRAG ─────────────────────────────────────────────────────────────────────
-local drg,drs,dsp=false,nil,nil
-Hdr.InputBegan:Connect(function(i)
-    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-        drg=true; drs=i.Position; dsp=Main.Position
-    end
-end)
-Hdr.InputEnded:Connect(function(i)
-    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drg=false end
-end)
-table.insert(Conns,UIS.InputChanged:Connect(function(i)
-    if not drg then return end
-    if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
-        local d=i.Position-drs
-        Main.Position=UDim2.new(dsp.X.Scale,dsp.X.Offset+d.X,dsp.Y.Scale,dsp.Y.Offset+d.Y)
-    end
-end))
-
--- ── CLOSE / MIN ──────────────────────────────────────────────────────────────
-ClsBtn.MouseButton1Click:Connect(function()
-    GunDraw:Remove()
-    for _,obj in pairs(ESPPool) do for _,d in pairs(obj) do d:Remove() end end
-    for _,c in ipairs(Conns) do c:Disconnect() end
-    if CoinConn then CoinConn:Disconnect() end
-    if AKConn then AKConn:Disconnect() end
-    getgenv().ZarcyLoaded=false
-    SG:Destroy()
-end)
-
-local mini=false
-MinBtn.MouseButton1Click:Connect(function()
-    mini=not mini
-    TabBar.Visible=not mini; Content.Visible=not mini
-    TweenSvc:Create(Main,TweenInfo.new(0.15),{Size=mini and UDim2.new(0,286,0,46) or UDim2.new(0,286,0,440)}):Play()
-end)
-
--- ── FAB — center bottom, clear of Roblox buttons ─────────────────────────────
+-- ── FAB ──────────────────────────────────────────────────────────────────────
 local Fab=Instance.new("TextButton",SG)
-Fab.Size=UDim2.new(0,56,0,56); Fab.Position=UDim2.new(0.5,-28,1,-90)
-Fab.BackgroundColor3=Color3.fromRGB(76,29,149); Fab.Font=FB; Fab.TextSize=20
+Fab.Size=UDim2.new(0,50,0,50); Fab.Position=UDim2.new(0.5,-25,1,-86)
+Fab.BackgroundColor3=Color3.fromRGB(76,29,149); Fab.Font=FB; Fab.TextSize=18
 Fab.TextColor3=cLPP; Fab.Text="✦"; Fab.BorderSizePixel=0; Fab.ZIndex=12
-corner(Fab,28); stroke(Fab,cLPP,1.5)
-Fab.MouseButton1Click:Connect(function() Main.Visible=not Main.Visible end)
+corner(Fab,25); stroke(Fab,cLPP,1.5)
+Fab.MouseButton1Click:Connect(function()
+    Main.Visible=not Main.Visible
+end)
 
-print("[zarcy] hub v2 loaded — "..#Players:GetPlayers().." in server")
+print("[zarcy] v3 ready")
 
-end) -- end pcall
-
-if not ok then warn("[zarcy] load error: "..tostring(err)) end
+end)
+if not ok then warn("[zarcy] error: "..tostring(err)) end
