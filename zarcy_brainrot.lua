@@ -1,5 +1,5 @@
 --[[
-    zarcy's Brainrot Scanner v2
+    zarcy's Brainrot Carpet Scanner v1
     Game     : Steal A Brainrot
     Executor : Delta (mobile)
 ]]
@@ -12,16 +12,14 @@ getgenv().ZarcyBRLoaded = true
 
 local ok, err = pcall(function()
 
-local Players     = game:GetService("Players")
-local TweenSvc    = game:GetService("TweenService")
-local TeleportSvc = game:GetService("TeleportService")
-local HttpService  = game:GetService("HttpService")
-local RunService   = game:GetService("RunService")
-local LP           = Players.LocalPlayer
+local Players    = game:GetService("Players")
+local TweenSvc   = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local LP         = Players.LocalPlayer
 
 local RARE_KEYS = {
     "OG","Secret","Legendary","Mythic","Ultra","Godly",
-    "Limited","Exclusive","Ancient","Divine","Celestial"
+    "Limited","Exclusive","Ancient","Divine","Celestial","Rare","Epic"
 }
 local BRAINROT_NAMES = {
     "Tralalelo","Tralala","Bombardino","Coccodrillo","Bombombini",
@@ -30,7 +28,8 @@ local BRAINROT_NAMES = {
     "Skibidi","Rizz","Gyatt","Sigma","Ohio","Sussy","Mewing",
     "Hawk","Tuah","Lirili","Larila","Boneca","Ambalabu",
     "Burbaloni","Lulilolli","Tracotoco","Triciclo","Crocodilo",
-    "Pinguim","Frigobar","Chimpanzini","Bananini"
+    "Pinguim","Frigobar","Chimpanzini","Bananini","Glorbo",
+    "Boykisser","Nerd","Goober","Blud","Rizzer","Skibi",
 }
 
 -- ── COLORS ───────────────────────────────────────────────────────────────────
@@ -42,10 +41,13 @@ local cPRP = Color3.fromRGB(109,40,217)
 local cLPP = Color3.fromRGB(192,132,252)
 local cTXT = Color3.fromRGB(210,175,255)
 local cOFF = Color3.fromRGB(30,8,60)
-local cOG  = Color3.fromRGB(255,180,30)
+local cOG  = Color3.fromRGB(255,190,30)
 local cSCL = Color3.fromRGB(255,80,220)
 local cLEG = Color3.fromRGB(255,100,100)
-local cOTH = Color3.fromRGB(140,200,140)
+local cMYT = Color3.fromRGB(255,140,255)
+local cULT = Color3.fromRGB(100,200,255)
+local cGOD = Color3.fromRGB(255,220,80)
+local cCOM = Color3.fromRGB(140,200,140)
 local FB   = Enum.Font.GothamBold
 local FN   = Enum.Font.Gotham
 
@@ -66,20 +68,20 @@ if not pok or not SG.Parent then SG.Parent=LP:WaitForChild("PlayerGui") end
 
 -- notify
 local Notif=Instance.new("Frame",SG)
-Notif.Size=UDim2.new(0,240,0,40); Notif.Position=UDim2.new(0.5,-120,0,14)
+Notif.Size=UDim2.new(0,250,0,40); Notif.Position=UDim2.new(0.5,-125,0,14)
 Notif.BackgroundColor3=cHDR; Notif.BorderSizePixel=0; Notif.ZIndex=99
 corner(Notif,10); stroke(Notif,cLPP)
 local NL=Instance.new("TextLabel",Notif)
 NL.Size=UDim2.new(1,0,1,0); NL.BackgroundTransparency=1
 NL.Font=FB; NL.TextSize=13; NL.TextColor3=cLPP
-NL.Text="🧠  zarcy's brainrot scanner v2"
-task.delay(2.8,function()
+NL.Text="🧠  zarcy's carpet scanner"
+task.delay(2.5,function()
     TweenSvc:Create(Notif,TweenInfo.new(0.4),{BackgroundTransparency=1}):Play()
     TweenSvc:Create(NL,TweenInfo.new(0.4),{TextTransparency=1}):Play()
     task.wait(0.45); Notif:Destroy()
 end)
 
-local W,H=272,440
+local W,H=268,440
 local Main=Instance.new("Frame",SG)
 Main.Size=UDim2.new(0,W,0,H); Main.Position=UDim2.new(0,6,0.5,-H/2)
 Main.BackgroundColor3=cBG; Main.BorderSizePixel=0; Main.Active=true
@@ -96,7 +98,7 @@ local HTL=Instance.new("TextLabel",Hdr)
 HTL.Size=UDim2.new(1,-78,1,0); HTL.Position=UDim2.new(0,10,0,0)
 HTL.BackgroundTransparency=1; HTL.Font=FB; HTL.TextSize=13
 HTL.TextColor3=cLPP; HTL.TextXAlignment=Enum.TextXAlignment.Left
-HTL.Text="🧠  zarcy's brainrot scanner"
+HTL.Text="🧠  carpet scanner"
 local MinBtn=Instance.new("TextButton",Hdr)
 MinBtn.Size=UDim2.new(0,32,0,32); MinBtn.Position=UDim2.new(1,-68,0,4)
 MinBtn.BackgroundTransparency=1; MinBtn.Font=FB; MinBtn.TextSize=16
@@ -110,45 +112,40 @@ local Body=Instance.new("Frame",Main)
 Body.Size=UDim2.new(1,0,1,-40); Body.Position=UDim2.new(0,0,0,40)
 Body.BackgroundTransparency=1
 
--- status
+-- status bar
 local StatBar=Instance.new("Frame",Body)
 StatBar.Size=UDim2.new(1,0,0,28); StatBar.Position=UDim2.new(0,0,0,0)
 StatBar.BackgroundColor3=cSEC; StatBar.BorderSizePixel=0
 local StatLbl=Instance.new("TextLabel",StatBar)
 StatLbl.Size=UDim2.new(1,-10,1,0); StatLbl.Position=UDim2.new(0,8,0,0)
 StatLbl.BackgroundTransparency=1; StatLbl.Font=FB; StatLbl.TextSize=11
-StatLbl.TextColor3=Color3.fromRGB(139,92,246); StatLbl.TextXAlignment=Enum.TextXAlignment.Left
-StatLbl.Text="● idle"
+StatLbl.TextColor3=Color3.fromRGB(139,92,246)
+StatLbl.TextXAlignment=Enum.TextXAlignment.Left
+StatLbl.Text="● scanning carpet..."
 
 local function SetStatus(txt,col)
-    StatLbl.Text=txt; StatLbl.TextColor3=col or Color3.fromRGB(139,92,246)
+    StatLbl.Text=txt
+    StatLbl.TextColor3=col or Color3.fromRGB(139,92,246)
 end
 
--- control buttons
-local BtnBar=Instance.new("Frame",Body)
-BtnBar.Size=UDim2.new(1,-16,0,34); BtnBar.Position=UDim2.new(0,8,0,34)
-BtnBar.BackgroundTransparency=1
-local BRL=Instance.new("UIListLayout",BtnBar)
-BRL.FillDirection=Enum.FillDirection.Horizontal
-BRL.VerticalAlignment=Enum.VerticalAlignment.Center
-BRL.Padding=UDim.new(0,5)
+-- carpet info row
+local CarpetInfo=Instance.new("Frame",Body)
+CarpetInfo.Size=UDim2.new(1,-16,0,32); CarpetInfo.Position=UDim2.new(0,8,0,34)
+CarpetInfo.BackgroundColor3=cROW; CarpetInfo.BorderSizePixel=0; corner(CarpetInfo,7)
+local CarpetLbl=Instance.new("TextLabel",CarpetInfo)
+CarpetLbl.Size=UDim2.new(1,-100,1,0); CarpetLbl.Position=UDim2.new(0,10,0,0)
+CarpetLbl.BackgroundTransparency=1; CarpetLbl.Font=FB; CarpetLbl.TextSize=11
+CarpetLbl.TextColor3=cTXT; CarpetLbl.TextXAlignment=Enum.TextXAlignment.Left
+CarpetLbl.Text="🟣  Carpet: locating..."
+local RescanBtn=Instance.new("TextButton",CarpetInfo)
+RescanBtn.Size=UDim2.new(0,84,0,24); RescanBtn.Position=UDim2.new(1,-90,0.5,-12)
+RescanBtn.BackgroundColor3=Color3.fromRGB(40,10,90); RescanBtn.Font=FB; RescanBtn.TextSize=11
+RescanBtn.TextColor3=cLPP; RescanBtn.Text="↺ Rescan"; RescanBtn.BorderSizePixel=0
+corner(RescanBtn,6); stroke(RescanBtn,cPRP)
 
-local function CtrlBtn(parent,text,col)
-    local b=Instance.new("TextButton",parent)
-    b.Size=UDim2.new(0,0,0,28); b.AutomaticSize=Enum.AutomaticSize.X
-    b.BackgroundColor3=col or Color3.fromRGB(40,10,90)
-    b.Font=FB; b.TextSize=11; b.TextColor3=cLPP
-    b.Text="  "..text.."  "; b.BorderSizePixel=0; corner(b,7); stroke(b,cPRP)
-    return b
-end
-
-local ScanBtn = CtrlBtn(BtnBar,"▶ Scan")
-local HopBtn  = CtrlBtn(BtnBar,"⟳ Hop Servers")
-local StopBtn = CtrlBtn(BtnBar,"■ Stop",Color3.fromRGB(60,8,8))
-
--- filter row
+-- filter bar
 local FiltBar=Instance.new("Frame",Body)
-FiltBar.Size=UDim2.new(1,-16,0,28); FiltBar.Position=UDim2.new(0,8,0,74)
+FiltBar.Size=UDim2.new(1,-16,0,28); FiltBar.Position=UDim2.new(0,8,0,72)
 FiltBar.BackgroundColor3=cROW; FiltBar.BorderSizePixel=0; corner(FiltBar,6)
 pad(FiltBar,6,6,0,0)
 local FL=Instance.new("UIListLayout",FiltBar)
@@ -158,11 +155,12 @@ FL.Padding=UDim.new(0,4)
 
 local filterState={OG=true,Secret=true,Legendary=true,All=false}
 local rarDefs={
-    {k="OG",     col=cOG,  label="⭐ OG"},
-    {k="Secret", col=cSCL, label="🌀 Secret"},
-    {k="Legendary",col=cLEG,label="🔥 Legend"},
-    {k="All",    col=cOTH, label="All"},
+    {k="OG",        col=cOG,  label="⭐ OG"},
+    {k="Secret",    col=cSCL, label="🌀 Secret"},
+    {k="Legendary", col=cLEG, label="🔥 Legend"},
+    {k="All",       col=cCOM, label="All"},
 }
+local fBtns={}
 for _,rd in ipairs(rarDefs) do
     local fb=Instance.new("TextButton",FiltBar)
     fb.Size=UDim2.new(0,0,0,22); fb.AutomaticSize=Enum.AutomaticSize.X
@@ -170,38 +168,38 @@ for _,rd in ipairs(rarDefs) do
     fb.Font=FB; fb.TextSize=10
     fb.TextColor3=filterState[rd.k] and Color3.fromRGB(10,3,20) or cTXT
     fb.Text="  "..rd.label.."  "; fb.BorderSizePixel=0; corner(fb,5)
+    fBtns[rd.k]=fb
     local rdd=rd
     fb.MouseButton1Click:Connect(function()
         if rdd.k=="All" then
             for k in pairs(filterState) do filterState[k]=true end
+            for _,b in pairs(fBtns) do b.BackgroundColor3=cCOM; b.TextColor3=Color3.fromRGB(10,3,20) end
         else
             filterState[rdd.k]=not filterState[rdd.k]
+            fb.BackgroundColor3=filterState[rdd.k] and rdd.col or cOFF
+            fb.TextColor3=filterState[rdd.k] and Color3.fromRGB(10,3,20) or cTXT
         end
-        fb.BackgroundColor3=filterState[rdd.k] and rdd.col or cOFF
-        fb.TextColor3=filterState[rdd.k] and Color3.fromRGB(10,3,20) or cTXT
     end)
 end
 
--- log header
-local LogHead=Instance.new("Frame",Body)
-LogHead.Size=UDim2.new(1,-16,0,22); LogHead.Position=UDim2.new(0,8,0,108)
-LogHead.BackgroundColor3=cSEC; LogHead.BorderSizePixel=0; corner(LogHead,6)
-local LHL=Instance.new("TextLabel",LogHead)
-LHL.Size=UDim2.new(1,-56,1,0); LHL.Position=UDim2.new(0,8,0,0)
-LHL.BackgroundTransparency=1; LHL.Font=FB; LHL.TextSize=10
-LHL.TextColor3=Color3.fromRGB(139,92,246); LHL.TextXAlignment=Enum.TextXAlignment.Left
-LHL.Text="🧠  BRAINROT LOG"
-local ClearBtn=Instance.new("TextButton",LogHead)
+-- live carpet counter
+local CountBar=Instance.new("Frame",Body)
+CountBar.Size=UDim2.new(1,-16,0,22); CountBar.Position=UDim2.new(0,8,0,106)
+CountBar.BackgroundColor3=cSEC; CountBar.BorderSizePixel=0; corner(CountBar,6)
+local CountLbl=Instance.new("TextLabel",CountBar)
+CountLbl.Size=UDim2.new(0.6,0,1,0); CountLbl.Position=UDim2.new(0,8,0,0)
+CountLbl.BackgroundTransparency=1; CountLbl.Font=FB; CountLbl.TextSize=10
+CountLbl.TextColor3=Color3.fromRGB(139,92,246)
+CountLbl.TextXAlignment=Enum.TextXAlignment.Left
+CountLbl.Text="🟣 ON CARPET NOW: 0"
+local ClearBtn=Instance.new("TextButton",CountBar)
 ClearBtn.Size=UDim2.new(0,46,0,18); ClearBtn.Position=UDim2.new(1,-50,0.5,-9)
 ClearBtn.BackgroundColor3=Color3.fromRGB(50,8,80); ClearBtn.Font=FB; ClearBtn.TextSize=9
 ClearBtn.TextColor3=cLPP; ClearBtn.Text="Clear"; ClearBtn.BorderSizePixel=0; corner(ClearBtn,4)
-ClearBtn.MouseButton1Click:Connect(function()
-    for _,c in pairs(LogScroll:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
-end)
 
 -- log scroll
 local LogScroll=Instance.new("ScrollingFrame",Body)
-LogScroll.Size=UDim2.new(1,-16,1,-136); LogScroll.Position=UDim2.new(0,8,0,134)
+LogScroll.Size=UDim2.new(1,-16,1,-134); LogScroll.Position=UDim2.new(0,8,0,132)
 LogScroll.BackgroundColor3=Color3.fromRGB(6,2,16); LogScroll.BorderSizePixel=0
 LogScroll.ScrollBarThickness=2; LogScroll.ScrollBarImageColor3=cPRP
 LogScroll.CanvasSize=UDim2.new(0,0,0,0); LogScroll.AutomaticCanvasSize=Enum.AutomaticSize.Y
@@ -209,20 +207,26 @@ corner(LogScroll,8); stroke(LogScroll,Color3.fromRGB(30,8,60))
 local LogLayout=Instance.new("UIListLayout",LogScroll); LogLayout.Padding=UDim.new(0,3)
 pad(LogScroll,4,4,4,4)
 
+ClearBtn.MouseButton1Click:Connect(function()
+    for _,c in pairs(LogScroll:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
+end)
+
 -- ── RARITY HELPERS ───────────────────────────────────────────────────────────
 local function RarityColor(rarity)
     local r=rarity:lower()
-    if r:find("og")         then return cOG,  "⭐ OG"        end
-    if r:find("secret")     then return cSCL, "🌀 Secret"    end
-    if r:find("legendary")  then return cLEG, "🔥 Legendary" end
-    if r:find("mythic")     then return Color3.fromRGB(255,140,255),"✨ Mythic"   end
-    if r:find("ultra")      then return Color3.fromRGB(100,200,255),"💎 Ultra"    end
-    if r:find("godly")      then return Color3.fromRGB(255,220,80), "👑 Godly"   end
-    if r:find("limited")    then return Color3.fromRGB(255,160,60), "🎫 Limited" end
-    return cOTH, rarity
+    if r:find("og")        then return cOG,  "⭐ OG"         end
+    if r:find("secret")    then return cSCL, "🌀 Secret"     end
+    if r:find("legendary") then return cLEG, "🔥 Legendary"  end
+    if r:find("mythic")    then return cMYT, "✨ Mythic"     end
+    if r:find("ultra")     then return cULT, "💎 Ultra"      end
+    if r:find("godly")     then return cGOD, "👑 Godly"      end
+    if r:find("epic")      then return Color3.fromRGB(180,100,255),"💜 Epic" end
+    if r:find("rare")      then return Color3.fromRGB(100,160,255),"🔵 Rare" end
+    if r:find("limited")   then return Color3.fromRGB(255,160,60),"🎫 Limited" end
+    return cCOM, rarity
 end
 
-local function ShouldLog(rarity)
+local function ShouldShow(rarity)
     if filterState.All then return true end
     if not rarity then return false end
     local r=rarity:lower()
@@ -233,54 +237,139 @@ local function ShouldLog(rarity)
 end
 
 local function GetRarity(obj)
+    -- 1. check object name
     local n=obj.Name:lower()
     for _,k in ipairs(RARE_KEYS) do if n:find(k:lower()) then return k end end
+    -- 2. StringValue children
     for _,c in pairs(obj:GetChildren()) do
         if c:IsA("StringValue") then
             local cn=c.Name:lower()
-            if cn=="rarity" or cn=="tier" or cn=="rank" then
+            if cn=="rarity" or cn=="tier" or cn=="rank" or cn=="type" then
                 for _,k in ipairs(RARE_KEYS) do
                     if c.Value:lower():find(k:lower()) then return k end
                 end
+                return c.Value -- return raw value if no match
             end
         end
     end
+    -- 3. attributes
     for an,av in pairs(obj:GetAttributes()) do
         local al=an:lower()
         if al=="rarity" or al=="tier" or al=="rank" then
             for _,k in ipairs(RARE_KEYS) do
                 if tostring(av):lower():find(k:lower()) then return k end
             end
+            return tostring(av)
         end
     end
-    return nil
+    -- 4. check parent name
+    if obj.Parent then
+        local pn=obj.Parent.Name:lower()
+        for _,k in ipairs(RARE_KEYS) do if pn:find(k:lower()) then return k end end
+    end
+    return "Common"
 end
 
 local function GetBrainrotName(obj)
-    for _,bn in ipairs(BRAINROT_NAMES) do
-        if obj.Name:lower():find(bn:lower()) then return obj.Name end
-    end
-    for _,c in pairs(obj:GetChildren()) do
-        if c:IsA("StringValue") and (c.Name:lower()=="name" or c.Name:lower()=="brainrotname") then
-            return c.Value
-        end
-        if c:IsA("BillboardGui") then
-            for _,l in pairs(c:GetDescendants()) do
-                if l:IsA("TextLabel") and l.Text~="" and l.Text~="..." then return l.Text end
+    -- billboard label
+    for _,desc in pairs(obj:GetDescendants()) do
+        if desc:IsA("BillboardGui") then
+            for _,l in pairs(desc:GetDescendants()) do
+                if l:IsA("TextLabel") and l.Text~="" and #l.Text>2 then
+                    return l.Text
+                end
             end
         end
+    end
+    -- StringValue name tag
+    for _,c in pairs(obj:GetChildren()) do
+        if c:IsA("StringValue") and (c.Name:lower()=="name" or c.Name:lower()=="brainrotname" or c.Name:lower()=="unitname") then
+            return c.Value
+        end
+    end
+    -- known name in object name
+    for _,bn in ipairs(BRAINROT_NAMES) do
+        if obj.Name:lower():find(bn:lower()) then return obj.Name end
     end
     return obj.Name
 end
 
--- ── ADD LOG ENTRY — JOIN button always present ────────────────────────────────
-local function AddLog(brainrotName, rarity, jobId, isCurrentServer)
+-- ── CARPET LOCATOR ───────────────────────────────────────────────────────────
+local carpetPart = nil
+local carpetPos  = nil
+local CARPET_RANGE = 40 -- stud radius around carpet center
+
+local CARPET_NAMES = {
+    "carpet","rug","mat","floor","display","pad","spawn",
+    "brainrotpad","spawnpad","area","zone","platform"
+}
+
+local function FindCarpet()
+    -- search workspace for carpet by name
+    for _,obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") or obj:IsA("MeshPart") or obj:IsA("UnionOperation") then
+            local n=obj.Name:lower()
+            for _,cn in ipairs(CARPET_NAMES) do
+                if n:find(cn) then
+                    carpetPart=obj
+                    carpetPos=obj.Position
+                    CarpetLbl.Text="🟣  Carpet: "..obj.Name.." found"
+                    return true
+                end
+            end
+        end
+        -- also check models
+        if obj:IsA("Model") then
+            local n=obj.Name:lower()
+            for _,cn in ipairs(CARPET_NAMES) do
+                if n:find(cn) then
+                    local cf=obj:FindFirstChildWhichIsA("BasePart")
+                    if cf then
+                        carpetPart=cf; carpetPos=cf.Position
+                        CarpetLbl.Text="🟣  Carpet: "..obj.Name.." found"
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    -- fallback: any large flat part near center of map
+    local best,bd=nil,math.huge
+    for _,obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Size.X>10 and obj.Size.Z>10 and obj.Size.Y<3 then
+            local d=obj.Position.Magnitude
+            if d<bd then bd=d; best=obj end
+        end
+    end
+    if best then
+        carpetPart=best; carpetPos=best.Position
+        CarpetLbl.Text="🟣  Carpet: fallback → "..best.Name
+        return true
+    end
+    CarpetLbl.Text="⚠  Carpet not found — using workspace"
+    return false
+end
+
+-- ── LOG ENTRY ────────────────────────────────────────────────────────────────
+local loggedObjs = {} -- obj → frame, so we can remove when gone
+
+local function RemoveLog(obj)
+    if loggedObjs[obj] then
+        pcall(function() loggedObjs[obj]:Destroy() end)
+        loggedObjs[obj]=nil
+    end
+end
+
+local function AddCarpetLog(obj, brainrotName, rarity)
+    if loggedObjs[obj] then return end -- already logged
+
     local col, rarLabel = RarityColor(rarity)
 
     local entry=Instance.new("Frame",LogScroll)
     entry.Size=UDim2.new(1,-4,0,0); entry.AutomaticSize=Enum.AutomaticSize.Y
     entry.BackgroundColor3=Color3.fromRGB(14,5,34); entry.BorderSizePixel=0
-    corner(entry,7); stroke(entry,Color3.fromRGB(30,10,60),0.5)
+    corner(entry,7); stroke(entry,col,0.7)
+    loggedObjs[obj]=entry
 
     -- accent bar
     local bar=Instance.new("Frame",entry)
@@ -292,214 +381,194 @@ local function AddLog(brainrotName, rarity, jobId, isCurrentServer)
     local iL=Instance.new("UIListLayout",inner); iL.Padding=UDim.new(0,2)
     pad(inner,0,0,5,7)
 
-    -- brainrot name
+    -- name
     local nameLbl=Instance.new("TextLabel",inner)
     nameLbl.Size=UDim2.new(1,0,0,18); nameLbl.BackgroundTransparency=1
-    nameLbl.Font=FB; nameLbl.TextSize=13; nameLbl.TextColor3=Color3.fromRGB(240,220,255)
+    nameLbl.Font=FB; nameLbl.TextSize=14; nameLbl.TextColor3=Color3.fromRGB(240,220,255)
     nameLbl.TextXAlignment=Enum.TextXAlignment.Left; nameLbl.Text=brainrotName
 
     -- rarity
     local rarLbl=Instance.new("TextLabel",inner)
     rarLbl.Size=UDim2.new(1,0,0,14); rarLbl.BackgroundTransparency=1
-    rarLbl.Font=FB; rarLbl.TextSize=11; rarLbl.TextColor3=col
+    rarLbl.Font=FB; rarLbl.TextSize=12; rarLbl.TextColor3=col
     rarLbl.TextXAlignment=Enum.TextXAlignment.Left; rarLbl.Text=rarLabel
 
-    -- server tag
-    local srvLbl=Instance.new("TextLabel",inner)
-    srvLbl.Size=UDim2.new(1,0,0,13); srvLbl.BackgroundTransparency=1
-    srvLbl.Font=FN; srvLbl.TextSize=10; srvLbl.TextColor3=Color3.fromRGB(120,90,170)
-    srvLbl.TextXAlignment=Enum.TextXAlignment.Left
-    srvLbl.Text=(isCurrentServer and "📍 THIS SERVER  " or "🌐 server: ")..jobId:sub(1,18).."..."
+    -- position tag
+    local root = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj
+    local posStr = ""
+    if root then
+        local p=root.Position
+        posStr=string.format("📍 %.1f, %.1f, %.1f", p.X, p.Y, p.Z)
+    end
+    local posLbl=Instance.new("TextLabel",inner)
+    posLbl.Size=UDim2.new(1,0,0,13); posLbl.BackgroundTransparency=1
+    posLbl.Font=FN; posLbl.TextSize=10; posLbl.TextColor3=Color3.fromRGB(120,90,170)
+    posLbl.TextXAlignment=Enum.TextXAlignment.Left; posLbl.Text=posStr
 
-    -- button row — ALWAYS shows JOIN + Copy
-    local btnFrame=Instance.new("Frame",inner)
-    btnFrame.Size=UDim2.new(1,0,0,30); btnFrame.BackgroundTransparency=1
-    local bFL=Instance.new("UIListLayout",btnFrame)
+    -- button row
+    local btnF=Instance.new("Frame",inner)
+    btnF.Size=UDim2.new(1,0,0,30); btnF.BackgroundTransparency=1
+    local bFL=Instance.new("UIListLayout",btnF)
     bFL.FillDirection=Enum.FillDirection.Horizontal
     bFL.VerticalAlignment=Enum.VerticalAlignment.Center
     bFL.Padding=UDim.new(0,6)
 
-    -- JOIN button
-    local joinB=Instance.new("TextButton",btnFrame)
-    joinB.Size=UDim2.new(0,68,0,26)
-    joinB.BackgroundColor3=isCurrentServer and Color3.fromRGB(30,60,30) or cPRP
-    joinB.Font=FB; joinB.TextSize=12
-    joinB.TextColor3=Color3.fromRGB(240,255,240); joinB.BorderSizePixel=0
-    joinB.Text=isCurrentServer and "✓ HERE" or "  JOIN  "
-    corner(joinB,7)
-    if not isCurrentServer then
-        stroke(joinB,Color3.fromRGB(160,80,255),1)
-        joinB.MouseButton1Click:Connect(function()
-            joinB.Text="Going..."; joinB.BackgroundColor3=Color3.fromRGB(80,20,140)
-            local jok=pcall(function()
-                TeleportSvc:TeleportToPlaceInstance(game.PlaceId, jobId, LP)
-            end)
-            if not jok then
-                joinB.Text="Failed"; joinB.BackgroundColor3=Color3.fromRGB(100,20,20)
-            end
-        end)
-    else
-        -- current server JOIN still works (rejoins same server)
-        joinB.MouseButton1Click:Connect(function()
-            joinB.Text="✓ Here!"
-        end)
-    end
+    -- TP button
+    local tpB=Instance.new("TextButton",btnF)
+    tpB.Size=UDim2.new(0,68,0,26); tpB.BackgroundColor3=cPRP
+    tpB.Font=FB; tpB.TextSize=12; tpB.TextColor3=Color3.fromRGB(240,220,255)
+    tpB.Text="  TP  "; tpB.BorderSizePixel=0; corner(tpB,7); stroke(tpB,Color3.fromRGB(160,80,255))
+    tpB.MouseButton1Click:Connect(function()
+        local chr=LP.Character
+        local hrp=chr and chr:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local target = obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") or obj
+        if target then
+            hrp.CFrame=CFrame.new(target.Position+Vector3.new(0,4,0))
+            tpB.Text="✓ TP'd"
+            task.delay(1.5,function() if tpB and tpB.Parent then tpB.Text="  TP  " end end)
+        end
+    end)
 
-    -- copy ID
-    local cpB=Instance.new("TextButton",btnFrame)
-    cpB.Size=UDim2.new(0,72,0,26)
-    cpB.BackgroundColor3=Color3.fromRGB(35,10,75)
-    cpB.Font=FB; cpB.TextSize=11; cpB.TextColor3=cLPP
-    cpB.Text="Copy ID"; cpB.BorderSizePixel=0; corner(cpB,7); stroke(cpB,cPRP)
-    cpB.MouseButton1Click:Connect(function()
-        setclipboard(jobId); cpB.Text="Copied!"; task.delay(1.2,function() cpB.Text="Copy ID" end)
+    -- highlight button (draws an outline around it)
+    local hlB=Instance.new("TextButton",btnF)
+    hlB.Size=UDim2.new(0,76,0,26); hlB.BackgroundColor3=Color3.fromRGB(35,10,75)
+    hlB.Font=FB; hlB.TextSize=11; hlB.TextColor3=cLPP
+    hlB.Text="Highlight"; hlB.BorderSizePixel=0; corner(hlB,7); stroke(hlB,cPRP)
+    local highlighted=false
+    local selBox=nil
+    hlB.MouseButton1Click:Connect(function()
+        highlighted=not highlighted
+        if highlighted then
+            selBox=Instance.new("SelectionBox")
+            selBox.Color3=col; selBox.LineThickness=0.08
+            selBox.SurfaceTransparency=0.6; selBox.SurfaceColor3=col
+            selBox.Adornee=obj:IsA("Model") and obj or obj
+            selBox.Parent=workspace
+            hlB.Text="● Live"; hlB.BackgroundColor3=cPRP
+        else
+            if selBox then selBox:Destroy(); selBox=nil end
+            hlB.Text="Highlight"; hlB.BackgroundColor3=Color3.fromRGB(35,10,75)
+        end
+    end)
+    -- clean up selbox if entry removed
+    entry.AncestryChanged:Connect(function()
+        if selBox then pcall(function() selBox:Destroy() end); selBox=nil end
     end)
 
     task.wait()
     LogScroll.CanvasPosition=Vector2.new(0,math.huge)
-    return entry
 end
 
--- ── SCAN LOGIC ───────────────────────────────────────────────────────────────
-local scanned={}
-
-local function ScanWorkspace()
-    local found=0
-    local targets={}
-    for _,fn in ipairs({"Brainrots","Spawned","Active","Pets","Units","Characters","Models","Map"}) do
-        local f=workspace:FindFirstChild(fn,true)
-        if f then table.insert(targets,f) end
-    end
-    if #targets==0 then table.insert(targets,workspace) end
-    for _,target in ipairs(targets) do
-        for _,obj in pairs(target:GetDescendants()) do
-            if (obj:IsA("Model") or obj:IsA("BasePart")) and not scanned[obj] then
-                local rarity=GetRarity(obj)
-                if rarity and ShouldLog(rarity) then
-                    scanned[obj]=true; found=found+1
-                    local bname=GetBrainrotName(obj)
-                    AddLog(bname, rarity, game.JobId, true)
-                    print("[zarcy] FOUND:",bname,"|",rarity)
-                end
-            end
-        end
-    end
-    return found
-end
-
--- ── SERVER HOPPER ────────────────────────────────────────────────────────────
-local hopping=false; local scanning=false
-
-local function GetServers(cursor)
-    local url="https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
-    if cursor and cursor~="" then url=url.."&cursor="..cursor end
-    local s,r=pcall(function()
-        return HttpService:JSONDecode(game:HttpGet(url))
-    end)
-    if s and r then return r end
-    return nil
-end
-
-ScanBtn.MouseButton1Click:Connect(function()
-    if scanning then return end
-    scanning=true; scanned={}
-    SetStatus("🔍 scanning...",cLPP)
-    ScanBtn.BackgroundColor3=cPRP
-    task.spawn(function()
-        local found=ScanWorkspace()
-        scanning=false
-        ScanBtn.BackgroundColor3=Color3.fromRGB(40,10,90)
-        if found==0 then
-            SetStatus("● no rare brainrots here",Color3.fromRGB(180,100,100))
-            local e=Instance.new("Frame",LogScroll)
-            e.Size=UDim2.new(1,-4,0,28); e.BackgroundColor3=Color3.fromRGB(14,5,34)
-            e.BorderSizePixel=0; corner(e,6)
-            local l=Instance.new("TextLabel",e)
-            l.Size=UDim2.new(1,-10,1,0); l.Position=UDim2.new(0,8,0,0)
-            l.BackgroundTransparency=1; l.Font=FN; l.TextSize=11
-            l.TextColor3=Color3.fromRGB(120,80,160)
-            l.TextXAlignment=Enum.TextXAlignment.Left
-            l.Text="  No rare brainrots in this server"
-        else
-            SetStatus("✓ "..found.." found in THIS server!",cOG)
-        end
-    end)
-end)
-
-HopBtn.MouseButton1Click:Connect(function()
-    if hopping then return end
-    hopping=true
-    task.spawn(function()
-        SetStatus("⟳ fetching servers...",cLPP)
-        local data=GetServers()
-        if not data or not data.data then
-            SetStatus("✗ could not get server list",Color3.fromRGB(255,80,80))
-            hopping=false; return
-        end
-        local servers=data.data
-        SetStatus("⟳ found "..#servers.." servers — adding to log",cLPP)
-
-        for i,srv in ipairs(servers) do
-            if not hopping then break end
-            local jobId=srv.id
-            if jobId~=game.JobId then
-                local playerCount=srv.playing or srv.playerCount or 0
-                -- add each server to log with JOIN button
-                -- label as "Active Server" with player count
-                local label="Active Server  ["..playerCount.." players]"
-                AddLog(label, "OG", jobId, false)
-                task.wait(0.05)
-            end
-        end
-
-        if hopping then
-            hopping=false
-            SetStatus("✓ "..#servers.." servers listed — tap JOIN to hop",cOG)
-        end
-    end)
-end)
-
-StopBtn.MouseButton1Click:Connect(function()
-    hopping=false; scanning=false
-    SetStatus("■ stopped",Color3.fromRGB(180,80,80))
-    ScanBtn.BackgroundColor3=Color3.fromRGB(40,10,90)
-end)
-
--- ── LIVE SPAWN WATCHER ────────────────────────────────────────────────────────
-local lastScan=0
+-- ── CARPET SCANNER LOOP ───────────────────────────────────────────────────────
 local Conns={}
+local scanActive=true
+
+-- find carpet on load
+task.delay(1,function() FindCarpet() end)
+
+RescanBtn.MouseButton1Click:Connect(function()
+    carpetPart=nil; carpetPos=nil
+    FindCarpet()
+    -- clear stale entries
+    for obj,frame in pairs(loggedObjs) do
+        pcall(function() frame:Destroy() end)
+    end
+    loggedObjs={}
+    SetStatus("↺ rescanned carpet",cLPP)
+end)
+
+-- every 0.5s: check what's on the carpet, add new, remove gone
+local lastTick=0
 table.insert(Conns, RunService.Stepped:Connect(function()
+    if not scanActive then return end
     local now=tick()
-    if now-lastScan<3 then return end
-    lastScan=now
+    if now-lastTick < 0.5 then return end
+    lastTick=now
+
     task.spawn(function()
+        -- determine scan zone
+        local scanPos = carpetPos
+        local scanRange = CARPET_RANGE
+
+        -- if no carpet found yet try again
+        if not scanPos then
+            FindCarpet()
+            scanPos=carpetPos
+        end
+
+        local found={}
+        local candidates={}
+
+        -- collect all brainrot candidates in range
         for _,obj in pairs(workspace:GetDescendants()) do
-            if (obj:IsA("Model") or obj:IsA("BasePart")) and not scanned[obj] then
-                local rarity=GetRarity(obj)
-                if rarity and ShouldLog(rarity) then
-                    scanned[obj]=true
-                    local bname=GetBrainrotName(obj)
-                    AddLog(bname,rarity,game.JobId,true)
-                    SetStatus("🧠 NEW SPAWN: "..bname.." ["..rarity.."]",cOG)
-                    print("[zarcy] NEW:",bname,"|",rarity)
+            local isModel  = obj:IsA("Model")
+            local isPart   = obj:IsA("BasePart") or obj:IsA("MeshPart")
+            if not (isModel or isPart) then continue end
+
+            -- get world position
+            local worldPos
+            if isModel then
+                local root=obj:FindFirstChildWhichIsA("BasePart")
+                if root then worldPos=root.Position end
+            else
+                worldPos=obj.Position
+            end
+            if not worldPos then continue end
+
+            -- range check
+            local inRange = true
+            if scanPos then
+                inRange = (worldPos - scanPos).Magnitude <= scanRange
+            end
+            if not inRange then continue end
+
+            -- is it a brainrot?
+            local isBrainrot=false
+            local n=obj.Name:lower()
+            for _,bn in ipairs(BRAINROT_NAMES) do
+                if n:find(bn:lower()) then isBrainrot=true; break end
+            end
+            -- also check if it has a rarity tag (likely a brainrot item)
+            local rarity=GetRarity(obj)
+            if rarity and rarity~="Common" then isBrainrot=true end
+
+            if isBrainrot then
+                found[obj]=true
+                if not loggedObjs[obj] and ShouldShow(rarity) then
+                    table.insert(candidates,{obj=obj,rarity=rarity})
                 end
             end
+        end
+
+        -- add new ones
+        local newCount=#candidates
+        for _,c in ipairs(candidates) do
+            local bname=GetBrainrotName(c.obj)
+            AddCarpetLog(c.obj, bname, c.rarity)
+            print("[zarcy] ON CARPET:",bname,"|",c.rarity)
+            if newCount>0 then
+                SetStatus("🧠 "..bname.." ["..c.rarity.."] on carpet!",cOG)
+            end
+        end
+
+        -- remove ones that left
+        for obj,_ in pairs(loggedObjs) do
+            if not found[obj] and (not obj or not obj.Parent) then
+                RemoveLog(obj)
+            end
+        end
+
+        -- update counter
+        local onCarpet=0
+        for _ in pairs(loggedObjs) do onCarpet=onCarpet+1 end
+        CountLbl.Text="🟣 ON CARPET NOW: "..onCarpet
+
+        if onCarpet==0 and newCount==0 then
+            SetStatus("● watching carpet — nothing rare yet",Color3.fromRGB(139,92,246))
         end
     end)
 end))
-
--- auto scan on load
-task.delay(1.5,function()
-    SetStatus("🔍 auto-scanning...",cLPP)
-    task.spawn(function()
-        local found=ScanWorkspace()
-        if found>0 then
-            SetStatus("✓ "..found.." rare brainrot(s) in THIS server!",cOG)
-        else
-            SetStatus("● ready — tap Scan or Hop Servers",Color3.fromRGB(139,92,246))
-        end
-    end)
-end)
 
 -- ── DRAG ─────────────────────────────────────────────────────────────────────
 local dragging,dragStart,startPos=false,nil,nil
@@ -536,7 +605,9 @@ end)
 
 -- ── CLOSE ────────────────────────────────────────────────────────────────────
 ClsBtn.MouseButton1Click:Connect(function()
+    scanActive=false
     for _,c in ipairs(Conns) do pcall(function() c:Disconnect() end) end
+    for obj,_ in pairs(loggedObjs) do RemoveLog(obj) end
     getgenv().ZarcyBRLoaded=false; SG:Destroy()
 end)
 
@@ -548,7 +619,7 @@ Fab.TextColor3=cLPP; Fab.Text="🧠"; Fab.BorderSizePixel=0; Fab.ZIndex=12
 corner(Fab,25); stroke(Fab,cLPP,1.5)
 Fab.MouseButton1Click:Connect(function() Main.Visible=not Main.Visible end)
 
-print("[zarcy] brainrot scanner v2 loaded")
+print("[zarcy] carpet scanner loaded")
 
 end)
-if not ok then warn("[zarcy] error: "..tostring(err)) end
+if not ok then warn("[zarcy] carpet scanner error: "..tostring(err)) end
